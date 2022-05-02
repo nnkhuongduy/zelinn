@@ -1,22 +1,32 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema, ObjectId } from 'mongoose';
-import { Transform } from 'class-transformer';
+import { Document, Schema as MongooseSchema } from 'mongoose';
+import { User } from './user.schema';
+
+export const BOARD_PERMISSIONS = ['PUBLIC', 'PRIVATE'] as const;
 
 export type BoardDocument = Board & Document;
 
-@Schema()
-export class Board {
-  @Transform(({ value }) => value.toString())
-  _id: ObjectId;
+export type BoardPermission = typeof BOARD_PERMISSIONS[number];
 
-  @Prop()
-  owner: MongooseSchema.Types.ObjectId;
+@Schema({ timestamps: true })
+export class Board {
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User' })
+  owner: User | MongooseSchema.Types.ObjectId;
 
   @Prop()
   name: string;
 
   @Prop()
-  image: string;
+  thumbnail: string;
+
+  @Prop({ default: BOARD_PERMISSIONS[0], enum: BOARD_PERMISSIONS })
+  permission: BoardPermission;
+
+  @Prop({
+    default: [],
+    type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }],
+  })
+  members: User[] | MongooseSchema.Types.ObjectId[];
 }
 
 export const BoardSchema = SchemaFactory.createForClass(Board);

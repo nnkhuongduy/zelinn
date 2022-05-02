@@ -1,24 +1,25 @@
-import { Body, Controller, Post, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 
-import MongooseClassSerializerInterceptor from 'src/interceptors/mongoose-class-serializer.interceptor';
-import { User, UserDocument } from 'src/schemas/user.schema';
-import { LoginDto, VerifyDto } from './user.dto';
+import { UserDocument } from 'src/schemas/user.schema';
+import { JwtUser } from '../auth/auth.interface';
+import { JwtAuthGuard } from '../auth/jwt.guard';
+import { UserEditDto, UserRegisterDto } from './user.dto';
 import { UserService } from './user.service';
 
-@Controller('/users')
-@UseInterceptors(MongooseClassSerializerInterceptor(User))
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post('login')
-  async login(@Body() body: LoginDto) {
-    const { email } = body;
-
-    await this.userService.login(email);
+  @Post('register')
+  async register(@Body() body: UserRegisterDto): Promise<UserDocument> {
+    return await this.userService.register(body);
   }
 
-  @Post('verify')
-  async verify(@Body() body: VerifyDto): Promise<UserDocument> {
-    return await this.userService.verify(body);
+  @Post('edit')
+  @UseGuards(JwtAuthGuard)
+  async edit(@Body() body: UserEditDto, @Req() req): Promise<UserDocument> {
+    const { _id } = req.user as JwtUser;
+
+    return await this.userService.edit(_id, body);
   }
 }

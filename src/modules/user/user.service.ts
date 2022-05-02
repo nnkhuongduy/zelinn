@@ -1,68 +1,57 @@
 import { Model } from 'mongoose';
 import {
   ConflictException,
-  GoneException,
   Injectable,
+  NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import * as dayjs from 'dayjs';
 
 import { User, UserDocument } from 'src/schemas/user.schema';
-import { MailerService } from '@nestjs-modules/mailer';
-import { Verification } from 'src/schemas/verification.schema';
-import { VerifyDto } from './user.dto';
+import { UserEditDto, UserRegisterDto } from './user.dto';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
-    private readonly mailerService: MailerService,
+    private readonly authService: AuthService,
   ) {}
 
-  async login(email: string) {
-    let user = await this.userModel.findOne({ email });
+  async register({
+    name,
+    phone,
+    email,
+  }: UserRegisterDto): Promise<UserDocument> {
+    if (await this.userModel.exists({ $or: [{ phone }, { email }] }))
+      throw new NotAcceptableException('User already existed!');
 
-    if (!user)
-      user = await this.userModel.create({
-        email,
-      });
-
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    user.verification = new Verification();
-    user.verification.code = code;
-    user.verification.expireAt = dayjs().add(5, 'm').toDate();
-
-    await user.save();
-    await this.mailerService.sendMail({
-      to: email,
-      subject: 'Mã đăng nhập',
-      text: `Mã đăng nhập zelinn của bạn: ${code}`,
+    const user = await this.userModel.create({
+      name,
+      phone,
+      email,
     });
-  }
 
-  async verify({ email, code }: VerifyDto): Promise<UserDocument> {
-    const user = await this.userModel.findOne({ email });
-
-    if (!user) throw new NotFoundException('User not found!');
-
-    if (dayjs(user.verification.expireAt).isBefore(dayjs()))
-      throw new GoneException('Verification code is expired!');
-
-    if (user.verification.code !== code)
-      throw new ConflictException('Verification code is incorrect!');
-
-    user.verification = null;
-    await user.save();
+    await this.authService.sendVerification(email);
 
     return user;
   }
 
-  async checkUser(email: string) {
-    const user = await this.userModel.findOne({ email });
+  async edit(id: string, { name, phone }: UserEditDto): Promise<UserDocument> {
+    const user = await this.userModel.findById(id).select('-verification');
 
-    if (!user) return false;
+    if (!user) throw new NotFoundException('User not found!');
 
-    return true;
+    if (user.phone !== phone && await this.userModel.exists({ phone }))
+      throw new ConflictException(
+        'User with this phone number already existed!',
+      );
+
+    user.name = name;
+    user.phone = phone;
+
+    await user.save();
+
+    return user;
   }
 }

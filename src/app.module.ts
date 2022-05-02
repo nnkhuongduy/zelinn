@@ -7,6 +7,8 @@ import { AppService } from './app.service';
 import { BoardModule } from './modules/board/board.module';
 import { UserModule } from './modules/user/user.module';
 import { DatabaseModule } from './modules/database/database.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UploadModule } from './modules/upload/upload.module';
 
 @Module({
   imports: [
@@ -29,8 +31,10 @@ import { DatabaseModule } from './modules/database/database.module';
       }),
     }),
     DatabaseModule,
+    AuthModule,
     BoardModule,
     UserModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

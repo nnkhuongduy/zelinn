@@ -16,20 +16,20 @@ import { User, UserSchema } from 'src/schemas/user.schema';
       }),
     }),
     MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
       {
         name: Board.name,
         schema: BoardSchema,
       },
-      { name: User.name, schema: UserSchema },
     ]),
   ],
   exports: [
     MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
       {
         name: Board.name,
         schema: BoardSchema,
       },
-      { name: User.name, schema: UserSchema },
     ]),
   ],
 })

@@ -1,31 +1,25 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, ObjectId } from 'mongoose';
-import { Type, Transform, Exclude } from 'class-transformer';
-import { Verification, VerificationSchema } from './verification.schema';
+import { Document } from 'mongoose';
+import { Verification } from './verification.schema';
 
 export type UserDocument = User & Document;
 
-@Schema()
+@Schema({ timestamps: true })
 export class User {
-  @Transform(({ value }) => value.toString())
-  _id: ObjectId;
-
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   email: string;
 
-  @Prop({ default: '' })
+  @Prop({ required: true })
   name: string;
 
-  @Prop({ default: '' })
+  @Prop({ required: true, unique: true })
   phone: string;
 
-  @Prop()
-  birth: Date;
-
-  @Exclude()
-  @Prop({ type: VerificationSchema })
-  @Type(() => Verification)
+  @Prop({ type: Verification })
   verification: Verification;
+
+  @Prop()
+  avatar: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
