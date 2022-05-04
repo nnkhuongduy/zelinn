@@ -9,6 +9,9 @@ import { UserModule } from './modules/user/user.module';
 import { DatabaseModule } from './modules/database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { ListModule } from './modules/list/list.module';
+import { CardModule } from './modules/card/card.module';
 
 @Module({
   imports: [
@@ -35,6 +38,9 @@ import { UploadModule } from './modules/upload/upload.module';
     BoardModule,
     UserModule,
     UploadModule,
+    NotificationModule,
+    ListModule,
+    CardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

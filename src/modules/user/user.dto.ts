@@ -1,4 +1,11 @@
-import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsMongoId,
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class UserRegisterDto {
   @IsEmail()
@@ -26,4 +33,10 @@ export class UserEditDto {
   @MinLength(10)
   @MaxLength(12)
   phone: string;
+}
+
+export class UserFavBoardDto {
+  @IsMongoId()
+  @IsNotEmpty()
+  id: string;
 }

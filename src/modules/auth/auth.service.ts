@@ -20,10 +20,7 @@ export class AuthService {
     private readonly mailerService: MailerService,
   ) {}
 
-  async verify(
-    email: string,
-    code: string,
-  ): Promise<Omit<User, 'verification'>> {
+  async verify(email: string, code: string): Promise<UserDocument> {
     const user = await this.userModel.findOne({ email });
 
     if (!user) throw new NotFoundException('User not found!');
@@ -42,7 +39,7 @@ export class AuthService {
 
     const { verification, ..._user } = user.toJSON();
 
-    return _user;
+    return _user as UserDocument;
   }
 
   async checkUser(email: string): Promise<boolean> {

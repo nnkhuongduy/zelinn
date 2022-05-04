@@ -4,6 +4,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { Board, BoardSchema } from 'src/schemas/board.schema';
 import { User, UserSchema } from 'src/schemas/user.schema';
+import {
+  Notification,
+  NotificationSchema,
+} from 'src/schemas/notification.schema';
+import { Invitation, InvitationSchema } from 'src/schemas/invitation.schema';
+import { List, ListSchema } from 'src/schemas/list.schema';
+import { Card, CardSchema } from 'src/schemas/card.schema';
 
 @Global()
 @Module({
@@ -21,6 +28,22 @@ import { User, UserSchema } from 'src/schemas/user.schema';
         name: Board.name,
         schema: BoardSchema,
       },
+      {
+        name: Notification.name,
+        schema: NotificationSchema,
+      },
+      {
+        name: Invitation.name,
+        schema: InvitationSchema,
+      },
+      {
+        name: List.name,
+        schema: ListSchema,
+      },
+      {
+        name: Card.name,
+        schema: CardSchema,
+      },
     ]),
   ],
   exports: [
@@ -29,6 +52,22 @@ import { User, UserSchema } from 'src/schemas/user.schema';
       {
         name: Board.name,
         schema: BoardSchema,
+      },
+      {
+        name: Notification.name,
+        schema: NotificationSchema,
+      },
+      {
+        name: Invitation.name,
+        schema: InvitationSchema,
+      },
+      {
+        name: List.name,
+        schema: ListSchema,
+      },
+      {
+        name: Card.name,
+        schema: CardSchema,
       },
     ]),
   ],

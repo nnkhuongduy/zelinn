@@ -39,7 +39,7 @@ export class AuthController {
     const payload = { email, sub: _id };
 
     return {
-      token: this.jwtService.sign(payload)
+      token: this.jwtService.sign(payload),
     };
   }
 

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 import { Verification } from './verification.schema';
 
 export type UserDocument = User & Document;
@@ -20,6 +20,9 @@ export class User {
 
   @Prop()
   avatar: string;
+
+  @Prop({ default: [], type: [MongooseSchema.Types.ObjectId] })
+  favBoards: MongooseSchema.Types.ObjectId[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

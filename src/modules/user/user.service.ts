@@ -8,7 +8,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 
 import { User, UserDocument } from 'src/schemas/user.schema';
-import { UserEditDto, UserRegisterDto } from './user.dto';
+import { UserEditDto, UserFavBoardDto, UserRegisterDto } from './user.dto';
 import { AuthService } from '../auth/auth.service';
 
 @Injectable()
@@ -34,7 +34,9 @@ export class UserService {
 
     await this.authService.sendVerification(email);
 
-    return user;
+    const { verification, ..._user } = user;
+
+    return _user as UserDocument;
   }
 
   async edit(id: string, { name, phone }: UserEditDto): Promise<UserDocument> {
@@ -42,13 +44,29 @@ export class UserService {
 
     if (!user) throw new NotFoundException('User not found!');
 
-    if (user.phone !== phone && await this.userModel.exists({ phone }))
+    if (user.phone !== phone && (await this.userModel.exists({ phone })))
       throw new ConflictException(
         'User with this phone number already existed!',
       );
 
     user.name = name;
     user.phone = phone;
+
+    await user.save();
+
+    return user;
+  }
+
+  async favBoard(userId: string, { id: boardId }: UserFavBoardDto) {
+    const user = await this.userModel.findById(userId).select('-verification');
+
+    if (!user) throw new NotFoundException('User not found!');
+
+    if (user.favBoards.find((id) => id.toString() === boardId)) {
+      user.favBoards = user.favBoards.filter((id) => id.toString() !== boardId);
+    } else {
+      user.favBoards.push(boardId as any);
+    }
 
     await user.save();
 

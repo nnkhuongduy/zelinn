@@ -3,7 +3,7 @@ import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { UserDocument } from 'src/schemas/user.schema';
 import { JwtUser } from '../auth/auth.interface';
 import { JwtAuthGuard } from '../auth/jwt.guard';
-import { UserEditDto, UserRegisterDto } from './user.dto';
+import { UserEditDto, UserFavBoardDto, UserRegisterDto } from './user.dto';
 import { UserService } from './user.service';
 
 @Controller('users')
@@ -21,5 +21,16 @@ export class UserController {
     const { _id } = req.user as JwtUser;
 
     return await this.userService.edit(_id, body);
+  }
+
+  @Post('fav')
+  @UseGuards(JwtAuthGuard)
+  async favBoard(
+    @Body() body: UserFavBoardDto,
+    @Req() req,
+  ): Promise<UserDocument> {
+    const { _id } = req.user as JwtUser;
+
+    return await this.userService.favBoard(_id, body);
   }
 }
