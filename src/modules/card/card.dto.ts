@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsBoolean,
   IsDate,
   IsDateString,
   IsMongoId,
@@ -19,11 +20,11 @@ export class CreateCardDto {
   description: string;
 
   @IsDateString()
-  @IsOptional()
+  @IsNotEmpty()
   start: Date;
 
   @IsDateString()
-  @IsOptional()
+  @IsNotEmpty()
   due: Date;
 
   @IsArray()
@@ -39,4 +40,22 @@ export class GetCardsDto {
   @IsOptional()
   @IsMongoId()
   list: string;
+}
+
+export class GetCardDto {
+  @IsNotEmpty()
+  @IsMongoId()
+  card: string;
+}
+
+export class CompleteCardDto {
+  @IsNotEmpty()
+  @IsMongoId()
+  card: string;
+}
+
+export class DeleteCardDto {
+  @IsNotEmpty()
+  @IsMongoId()
+  card: string;
 }

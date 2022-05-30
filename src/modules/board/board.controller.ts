@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Post,
   Query,
@@ -17,6 +18,8 @@ import {
   ResponseInviteDto,
   UpdateBoardDto,
   GetBoardDto,
+  LeaveBoardDto,
+  DeleteBoardDto,
 } from './board.dto';
 import { BoardService } from './board.service';
 
@@ -56,9 +59,9 @@ export class BoardController {
     await this.boardService.updateBoard(_id, body);
   }
 
-  @Get('members/query')
+  @Post('members/query')
   @UseGuards(JwtAuthGuard)
-  async query(@Query() query: QueryUserDto, @Req() req) {
+  async query(@Body() query: QueryUserDto, @Req() req) {
     const { _id } = req.user as JwtUser;
 
     return await this.boardService.queryUserToInvite(_id, query);
@@ -86,5 +89,21 @@ export class BoardController {
     const { _id } = req.user as JwtUser;
 
     await this.boardService.removeMembers(_id, body);
+  }
+
+  @Post('leave')
+  @UseGuards(JwtAuthGuard)
+  async leaveBoard(@Body() body: LeaveBoardDto, @Req() req) {
+    const { _id } = req.user as JwtUser;
+
+    await this.boardService.leaveBoard(_id, body);
+  }
+
+  @Delete()
+  @UseGuards(JwtAuthGuard)
+  async deleteBoard(@Req() req, @Query() query: DeleteBoardDto) {
+    const { _id } = req.user as JwtUser;
+
+    await this.boardService.deleteBoard(_id, query);
   }
 }

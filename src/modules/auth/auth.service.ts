@@ -51,6 +51,13 @@ export class AuthService {
 
     if (!user) throw new NotFoundException('User not found!');
 
+    if (
+      user.verification &&
+      dayjs(user.verification.expireAt).isAfter(dayjs())
+    ) {
+      return;
+    }
+
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     user.verification = new Verification();
     user.verification.code = code;

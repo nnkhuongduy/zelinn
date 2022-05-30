@@ -7,9 +7,11 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
-import { Board, BoardDocument } from 'src/schemas/board.schema';
+import { Board, BoardDocument, BOARD_STATES } from 'src/schemas/board.schema';
 import {
+  DeleteBoardDto,
   InviteDto,
+  LeaveBoardDto,
   PostBoardDto,
   QueryUserDto,
   RemoveMembersDto,
@@ -23,6 +25,7 @@ import {
   NOTIFICATION_TYPES,
 } from 'src/schemas/notification.schema';
 import { Invitation, InvitationDocument } from 'src/schemas/invitation.schema';
+import { List, ListDocument, LIST_STATES } from 'src/schemas/list.schema';
 
 @Injectable()
 export class BoardService implements OnModuleInit {
@@ -33,6 +36,8 @@ export class BoardService implements OnModuleInit {
     private readonly notificationModel: Model<NotificationDocument>,
     @InjectModel(Invitation.name)
     private readonly invitationModel: Model<InvitationDocument>,
+    @InjectModel(List.name)
+    private readonly listModel: Model<ListDocument>,
   ) {}
 
   async onModuleInit() {
@@ -50,8 +55,9 @@ export class BoardService implements OnModuleInit {
   }
 
   async getBoards(userId: string) {
+    const user = await this.userModel.findById(userId);
     const boards = await this.boardModel
-      .find({ members: userId })
+      .find({ members: userId, state: BOARD_STATES[0] })
       .populate({ path: 'owner', select: '_id name avatar' })
       .populate({ path: 'members', select: '_id name avatar email' })
       .populate({ path: 'pending', select: '_id name avatar email' });
@@ -60,7 +66,10 @@ export class BoardService implements OnModuleInit {
     if (boards.length > 0)
       isOwner = (boards[0].owner as any)._id.toString() === userId;
 
-    return boards.map((board) => {
+    return [
+      ...boards.filter(({ _id }) => user.favBoards.includes(_id)),
+      ...boards.filter(({ _id }) => !user.favBoards.includes(_id)),
+    ].map((board) => {
       const _board = board.toJSON();
       return {
         ..._board,
@@ -73,13 +82,14 @@ export class BoardService implements OnModuleInit {
           email: isOwner ? member.email : undefined,
           pending: true,
         })),
+        faved: user.favBoards.includes(board._id),
       };
     });
   }
 
   async getBoard(userId: string, boardId: string): Promise<BoardDocument> {
     const board = await this.boardModel
-      .findById(boardId)
+      .findOne({ _id: boardId, state: BOARD_STATES[0] })
       .populate({ path: 'owner', select: '_id name avatar' })
       .populate({ path: 'members', select: '_id name avatar email' })
       .populate({ path: 'pending', select: '_id name avatar email' });
@@ -132,7 +142,11 @@ export class BoardService implements OnModuleInit {
       description,
     }: UpdateBoardDto,
   ) {
-    const board = await this.boardModel.findOne({ _id: id, owner: userId });
+    const board = await this.boardModel.findOne({
+      _id: id,
+      owner: userId,
+      state: BOARD_STATES[0],
+    });
 
     if (!board) throw new NotFoundException('Board not found!');
 
@@ -178,16 +192,19 @@ export class BoardService implements OnModuleInit {
 
   async queryUserToInvite(
     userId: string,
-    { board: boardId, value }: QueryUserDto,
+    { board: boardId, query }: QueryUserDto,
   ) {
-    const board = await this.boardModel.findById(boardId);
+    const board = await this.boardModel.findOne({
+      _id: boardId,
+      state: BOARD_STATES[0],
+    });
 
     if (!board) throw new NotFoundException('Board not found!');
 
     const users = await this.userModel
       .find({
         $and: [
-          { $or: [{ email: value }, { name: value }] },
+          { $or: [{ email: query }, { name: query }] },
           { _id: { $ne: userId } },
           { _id: { $nin: board.pending } },
         ],
@@ -201,7 +218,10 @@ export class BoardService implements OnModuleInit {
   }
 
   async invite(ownerId: string, { members, board: boardId }: InviteDto) {
-    const board = await this.boardModel.findById(boardId);
+    const board = await this.boardModel.findOne({
+      _id: boardId,
+      state: BOARD_STATES[0],
+    });
     const owner = await this.userModel.findById(ownerId);
 
     if (!board) throw new NotFoundException('Board not found!');
@@ -241,7 +261,11 @@ export class BoardService implements OnModuleInit {
       user: userId,
       notification: notiId,
     });
+    const board = await this.boardModel
+      .findOne({ _id: invitation.board, state: BOARD_STATES[0] })
+      .populate('owner');
 
+    if (!board) throw new NotFoundException('Board not found!');
     if (!notification) throw new NotFoundException('Notification not found!');
     if (!user) throw new NotFoundException('User not found!');
     if (!invitation) throw new NotFoundException('Invitation not found!');
@@ -252,10 +276,6 @@ export class BoardService implements OnModuleInit {
 
     await notification.save();
     await invitation.save();
-
-    const board = await this.boardModel
-      .findById(invitation.board)
-      .populate('owner');
 
     board.pending = (board.pending as Schema.Types.ObjectId[]).filter(
       (id) => id.toString() !== userId,
@@ -293,7 +313,7 @@ export class BoardService implements OnModuleInit {
     { board: boardId, members }: RemoveMembersDto,
   ) {
     const board = await this.boardModel
-      .findById(boardId)
+      .findOne({ _id: boardId, state: BOARD_STATES[0] })
       .populate({ path: 'owner', select: '_id name avatar' });
 
     if (!board) throw new NotFoundException('Board not found');
@@ -313,5 +333,43 @@ export class BoardService implements OnModuleInit {
     }
 
     await board.save();
+  }
+
+  async leaveBoard(userId: string, { board: boardId }: LeaveBoardDto) {
+    const board = await this.boardModel.findOne({
+      _id: boardId,
+      members: userId,
+      state: BOARD_STATES[0],
+    });
+
+    if (!board) throw new NotFoundException('Board not found!');
+
+    board.members = (board.members as Schema.Types.ObjectId[]).filter(
+      (id) => id.toString() !== userId,
+    );
+
+    await board.save();
+  }
+
+  async deleteBoard(userId: string, { board: boardId }: DeleteBoardDto) {
+    const board = await this.boardModel.findOne({
+      _id: boardId,
+      members: userId,
+      state: BOARD_STATES[0],
+    });
+
+    if (!board) throw new NotFoundException('Board not found!');
+
+    board.state = BOARD_STATES[1];
+
+    await board.save();
+    await this.listModel.updateMany(
+      {
+        board: board._id,
+      },
+      {
+        state: LIST_STATES[1],
+      },
+    );
   }
 }

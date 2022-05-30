@@ -12,6 +12,7 @@ import { UploadModule } from './modules/upload/upload.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { ListModule } from './modules/list/list.module';
 import { CardModule } from './modules/card/card.module';
+import { PepperModule } from './modules/pepper/pepper.module';
 
 @Module({
   imports: [
@@ -23,13 +24,14 @@ import { CardModule } from './modules/card/card.module';
         transport: {
           host: configService.get<string>('MAIL_HOST'),
           port: configService.get<number>('MAIL_PORT'),
+          secure: true,
           auth: {
             user: configService.get<string>('MAIL_USER'),
             pass: configService.get<string>('MAIL_PASS'),
           },
         },
         defaults: {
-          from: '"Zelinn" <service@zelinn.com>',
+          from: '"Zelinn" <noreply@zelinn.pw>',
         },
       }),
     }),
@@ -41,6 +43,7 @@ import { CardModule } from './modules/card/card.module';
     NotificationModule,
     ListModule,
     CardModule,
+    PepperModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -5,9 +5,9 @@ import { User } from './user.schema';
 
 export type CardDocument = Card & Document;
 
-export const Card_STATES = ['ACTIVE', 'ARCHIVED'] as const;
+export const CARD_STATES = ['ACTIVE', 'ARCHIVED'] as const;
 
-export type CardState = typeof Card_STATES[number];
+export type CardState = typeof CARD_STATES[number];
 
 @Schema({ timestamps: true })
 export class Card {
@@ -36,13 +36,16 @@ export class Card {
   })
   participants: User[] | MongooseSchema.Types.ObjectId[];
 
-  @Prop()
+  @Prop({ required: true })
   start: Date;
 
-  @Prop()
+  @Prop({ required: true })
   due: Date;
 
-  @Prop({ default: Card_STATES[0], enum: Card_STATES })
+  @Prop({ default: false })
+  completed: boolean;
+
+  @Prop({ default: CARD_STATES[0], enum: CARD_STATES })
   state: CardState;
 }
 

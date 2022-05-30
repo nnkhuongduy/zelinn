@@ -13,8 +13,11 @@ export class List {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Board' })
   board: Board | MongooseSchema.Types.ObjectId;
 
-  @Prop()
+  @Prop({ default: '', required: true })
   name: string;
+
+  @Prop({ required: true })
+  priority: number;
 
   @Prop({ default: LIST_STATES[0], enum: LIST_STATES })
   state: ListState;

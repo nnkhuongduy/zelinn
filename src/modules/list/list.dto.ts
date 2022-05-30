@@ -1,4 +1,11 @@
-import { IsInt, IsMongoId, IsNotEmpty, Min } from 'class-validator';
+import {
+  IsInt,
+  IsMongoId,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class CreateListDto {
   @IsMongoId()
@@ -11,11 +18,42 @@ export class CreateListDto {
   @IsNotEmpty()
   @IsInt()
   @Min(1)
-  position: number;
+  priority: number;
 }
 
 export class GetListsDto {
   @IsMongoId()
   @IsNotEmpty()
   board: string;
+}
+
+export class GetListDto {
+  @IsMongoId()
+  @IsOptional()
+  list: string;
+
+  @IsMongoId()
+  @IsOptional()
+  card: string;
+}
+
+export class UpdateListDto {
+  @IsNotEmpty()
+  @IsMongoId()
+  id: string;
+
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  priority: number;
+}
+
+export class DeleteListDto {
+  @IsNotEmpty()
+  @IsMongoId()
+  list: string;
 }

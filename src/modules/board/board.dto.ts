@@ -4,6 +4,7 @@ import {
   IsIn,
   IsMongoId,
   IsNotEmpty,
+  IsString,
   IsUrl,
 } from 'class-validator';
 import { BoardPermission, BOARD_PERMISSIONS } from 'src/schemas/board.schema';
@@ -40,7 +41,7 @@ export class UpdateBoardDto {
   @IsMongoId()
   owner: string;
 
-  @IsNotEmpty()
+  @IsString()
   description: string;
 }
 
@@ -50,7 +51,7 @@ export class QueryUserDto {
   board: string;
 
   @IsNotEmpty()
-  value: string;
+  query: string;
 }
 
 export class InviteDto {
@@ -86,4 +87,16 @@ export class GetBoardDto {
   @IsMongoId()
   @IsNotEmpty()
   id: string;
+}
+
+export class LeaveBoardDto {
+  @IsMongoId()
+  @IsNotEmpty()
+  board: string;
+}
+
+export class DeleteBoardDto {
+  @IsMongoId()
+  @IsNotEmpty()
+  board: string;
 }
