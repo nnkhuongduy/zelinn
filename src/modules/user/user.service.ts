@@ -10,11 +10,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from 'src/schemas/user.schema';
 import { UserEditDto, UserFavBoardDto, UserRegisterDto } from './user.dto';
 import { AuthService } from '../auth/auth.service';
+import {
+  Notification,
+  NotificationDocument,
+} from 'src/schemas/notification.schema';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<NotificationDocument>,
     private readonly authService: AuthService,
   ) {}
 
@@ -53,6 +59,12 @@ export class UserService {
     user.phone = phone;
 
     await user.save();
+
+    this.notificationModel.create({
+      user: id,
+      title: `Thông tin cá nhân đã được cập nhật`,
+      description: '',
+    });
 
     return user;
   }

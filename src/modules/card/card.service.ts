@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { Model, Schema } from 'mongoose';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Card, CardDocument, CARD_STATES } from 'src/schemas/card.schema';
@@ -11,6 +11,10 @@ import {
 } from './card.dto';
 import { Board, BoardDocument, BOARD_STATES } from 'src/schemas/board.schema';
 import { List, ListDocument, LIST_STATES } from 'src/schemas/list.schema';
+import {
+  Notification,
+  NotificationDocument,
+} from 'src/schemas/notification.schema';
 
 @Injectable()
 export class CardService {
@@ -18,6 +22,8 @@ export class CardService {
     @InjectModel(Card.name) private readonly cardModel: Model<CardDocument>,
     @InjectModel(Board.name) private readonly boardModel: Model<BoardDocument>,
     @InjectModel(List.name) private readonly listModel: Model<ListDocument>,
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<NotificationDocument>,
   ) {}
 
   async createCard(
@@ -33,6 +39,13 @@ export class CardService {
       due,
       participants,
     });
+
+    for (const participant of participants)
+      this.notificationModel.create({
+        user: participant,
+        title: `Bạn đã được thêm vào thẻ ${name}`,
+        description: description,
+      });
   }
 
   async getCards(
@@ -120,9 +133,16 @@ export class CardService {
 
     card.completed = !card.completed;
 
-    // console.log(card);
-
     await card.save();
+
+    if (card.completed)
+      for (const participant of card.participants) {
+        this.notificationModel.create({
+          user: participant as Schema.Types.ObjectId,
+          title: `Thẻ ${card.name} đã hoàn thành`,
+          description: card.description,
+        });
+      }
   }
 
   async deleteCard(userId: string, { card: cardId }: DeleteCardDto) {
@@ -151,5 +171,13 @@ export class CardService {
     card.state = CARD_STATES[1];
 
     await card.save();
+
+    for (const participant of card.participants) {
+      this.notificationModel.create({
+        user: participant as Schema.Types.ObjectId,
+        title: `Thẻ ${card.name} đã bị xóa`,
+        description: card.description,
+      });
+    }
   }
 }

@@ -26,6 +26,7 @@ import {
 } from 'src/schemas/notification.schema';
 import { Invitation, InvitationDocument } from 'src/schemas/invitation.schema';
 import { List, ListDocument, LIST_STATES } from 'src/schemas/list.schema';
+import { Card, CardDocument, CARD_STATES } from 'src/schemas/card.schema';
 
 @Injectable()
 export class BoardService implements OnModuleInit {
@@ -38,6 +39,8 @@ export class BoardService implements OnModuleInit {
     private readonly invitationModel: Model<InvitationDocument>,
     @InjectModel(List.name)
     private readonly listModel: Model<ListDocument>,
+    @InjectModel(Card.name)
+    private readonly cardModel: Model<CardDocument>,
   ) {}
 
   async onModuleInit() {
@@ -324,11 +327,18 @@ export class BoardService implements OnModuleInit {
       (id) => !members.includes(id.toString()),
     );
 
-    for (const memberId of board.members) {
+    for (const memberId of members) {
       this.userModel.findByIdAndUpdate(memberId.toString(), {
         $pull: {
           favBoards: boardId,
         },
+      });
+
+      this.notificationModel.create({
+        user: memberId,
+        title: `Bạn không còn là thành viên của bảng ${board.name}`,
+        description: `${board.description}`,
+        icon: board.thumbnail,
       });
     }
 
@@ -348,6 +358,13 @@ export class BoardService implements OnModuleInit {
       (id) => id.toString() !== userId,
     );
 
+    this.notificationModel.create({
+      user: userId,
+      title: `Bạn không còn là thành viên của bảng ${board.name}`,
+      description: `${board.description}`,
+      icon: board.thumbnail,
+    });
+
     await board.save();
   }
 
@@ -359,8 +376,21 @@ export class BoardService implements OnModuleInit {
     });
 
     if (!board) throw new NotFoundException('Board not found!');
+    if ((board.owner as UserDocument)._id.toString() !== userId)
+      throw new BadRequestException('Not the owner');
+
+    const lists = await this.listModel.find({ board: board._id });
 
     board.state = BOARD_STATES[1];
+
+    for (const member of board.members) {
+      this.notificationModel.create({
+        user: member as Schema.Types.ObjectId,
+        title: `Bảng ${board.name} đã bị xóa`,
+        description: `${board.description}`,
+        icon: board.thumbnail,
+      });
+    }
 
     await board.save();
     await this.listModel.updateMany(
@@ -371,5 +401,15 @@ export class BoardService implements OnModuleInit {
         state: LIST_STATES[1],
       },
     );
+    for (const list of lists) {
+      await this.cardModel.updateMany(
+        {
+          list: list._id,
+        },
+        {
+          state: CARD_STATES[1],
+        },
+      );
+    }
   }
 }
