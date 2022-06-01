@@ -63,6 +63,7 @@ export class UserService {
     this.notificationModel.create({
       user: id,
       title: `Thông tin cá nhân đã được cập nhật`,
+      label: `Cập nhật thông tin`,
       description: '',
     });
 

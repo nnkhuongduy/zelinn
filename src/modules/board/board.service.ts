@@ -337,6 +337,7 @@ export class BoardService implements OnModuleInit {
       this.notificationModel.create({
         user: memberId,
         title: `Bạn không còn là thành viên của bảng ${board.name}`,
+        label: `Bảng ${board.name}`,
         description: `${board.description}`,
         icon: board.thumbnail,
       });
@@ -361,6 +362,7 @@ export class BoardService implements OnModuleInit {
     this.notificationModel.create({
       user: userId,
       title: `Bạn không còn là thành viên của bảng ${board.name}`,
+      label: `Bảng ${board.name}`,
       description: `${board.description}`,
       icon: board.thumbnail,
     });
@@ -387,6 +389,7 @@ export class BoardService implements OnModuleInit {
       this.notificationModel.create({
         user: member as Schema.Types.ObjectId,
         title: `Bảng ${board.name} đã bị xóa`,
+        label: `Bảng ${board.name}`,
         description: `${board.description}`,
         icon: board.thumbnail,
       });

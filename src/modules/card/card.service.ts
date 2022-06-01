@@ -44,6 +44,7 @@ export class CardService {
       this.notificationModel.create({
         user: participant,
         title: `Bạn đã được thêm vào thẻ ${name}`,
+        label: `Thẻ ${name}`,
         description: description,
       });
   }
@@ -140,6 +141,7 @@ export class CardService {
         this.notificationModel.create({
           user: participant as Schema.Types.ObjectId,
           title: `Thẻ ${card.name} đã hoàn thành`,
+          label: `Thẻ ${card.name}`,
           description: card.description,
         });
       }
@@ -176,6 +178,7 @@ export class CardService {
       this.notificationModel.create({
         user: participant as Schema.Types.ObjectId,
         title: `Thẻ ${card.name} đã bị xóa`,
+        label: `Thẻ ${card.name}`,
         description: card.description,
       });
     }
